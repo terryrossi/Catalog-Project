@@ -22,6 +22,8 @@ class webServerHandler(BaseHTTPRequestHandler):
                 self.end_headers()
 
                 output = ""
+                output += "<H1>DEPARTMENTS</H1>"
+                output += "</br></br>"
                 output += '''<a href="/amazon/newcat">Create a new Category</a></br>'''
 
                 cat = session.query(Category).all()
@@ -31,14 +33,21 @@ class webServerHandler(BaseHTTPRequestHandler):
                     output += '''<a href="https://example.com">edit</a></br>'''
                     output += '''<a href="https://example.com">delete</a>'''
                     output += "</br></br>"
-                    print item.name
+                    print (item.name)
+                    prod = session.query(Product).join(Category).filter(Product.category_id==item.id).all()
+                    output += "<ul>"
+                    for itemprod in prod:
+                        output += "<h4><li> %s </h4></li>" % itemprod.name
+                        print (itemprod.name)
+                    print ("\n")
+                    output += "</ul>"
 
 #                    menu = session.query(MenuItem).join(Restaurant).filter(MenuItem.restaurant_id==Restaurant.id).all()
 #                    for menuitem in menu:
 #                        output += "<h2> %s </h2>" % menuitem.name
 #                        print menuitem.name
                 output += "</body></html>"
-                print "\n"
+                print ("\n")
                 self.wfile.write(output)
                 return
 
@@ -52,7 +61,7 @@ class webServerHandler(BaseHTTPRequestHandler):
                 output += '''<form method='POST' enctype='multipart/form-data' action='/amazon/newcat'><h2>Would you like to create a new Category?</h2><input name="newcat" type="text" ><input type="submit" value="Create"> </form>'''
                 output += "</body></html>"
                 self.wfile.write(output)
-                print output
+                print (output)
                 return
 
 
@@ -69,7 +78,7 @@ class webServerHandler(BaseHTTPRequestHandler):
                     messagecontent = fields.get('newcat')
 
                 category = Category(name = messagecontent[0])
-                print "New category : %s" % category.name
+                print ("New category : %s" % category.name)
                 session.add(category)
                 session.commit()
 
@@ -86,10 +95,10 @@ def main():
     try:
         port = 8080
         server = HTTPServer(('', port), webServerHandler)
-        print "Web Server running on port %s" % port
+        print ("Web Server running on port %s" % port)
         server.serve_forever()
     except KeyboardInterrupt:
-        print " ^C entered, stopping web server...."
+        print (" ^C entered, stopping web server....")
         server.socket.close()
 
 if __name__ == '__main__':
