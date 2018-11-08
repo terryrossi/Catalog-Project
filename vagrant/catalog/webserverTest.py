@@ -24,20 +24,23 @@ class webServerHandler(BaseHTTPRequestHandler):
                 output = ""
                 output += "<H1>DEPARTMENTS</H1>"
                 output += "</br></br>"
+                #link to create a new Category
                 output += '''<a href="/amazon/newcat">Create a new Category</a></br>'''
 
                 cat = session.query(Category).all()
-                for item in cat:
+                for itemcat in cat:
                     output += "<html><body>"
-                    output += "<h2> %s </h2>" % item.name
-                    output += '''<a href="https://example.com">edit</a></br>'''
-                    output += '''<a href="https://example.com">delete</a>'''
+                    output += "<h2> %s </h2>" % itemcat.name
+                    output += '''<a href="/amazon/%s/catedit">edit</a></br>''' % itemcat.id
+
+                    output += '''<a href="/amazon/%s/catdelete">delete</a>''' % itemcat.id
                     output += "</br></br>"
-                    print (item.name)
-                    prod = session.query(Product).join(Category).filter(Product.category_id==item.id).all()
+                    print (itemcat.name)
+                    prod = session.query(Product).join(Category).filter(Product.category_id==itemcat.id).all()
                     output += "<ul>"
                     for itemprod in prod:
                         output += "<h4><li> %s </h4></li>" % itemprod.name
+                        output += '''<a href="/amazon/%s/edit">prodedit</a></br>''' % itemprod.id
                         print (itemprod.name)
                     print ("\n")
                     output += "</ul>"
@@ -49,6 +52,29 @@ class webServerHandler(BaseHTTPRequestHandler):
                 output += "</body></html>"
                 print ("\n")
                 self.wfile.write(output)
+                return
+
+            if self.path.endswith("/catedit"):
+                print ("self.path :", self.path)
+                catIDPath = self.path.split("/")[2]
+                print ("self.path.split(/)[2] :", catIDPath)
+                pathCategoryQuery = session.query(Category).filter_by(
+                    id=catIDPath).one()
+                if pathCategoryQuery:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    output = ""
+                    output += "<html><body>"
+                output += "<h1>"
+                output += pathCategoryQuery.name
+                output += "</h1>"
+                output += '''<form method='POST' enctype='multipart/form-data' action='/amazon/%s/catedit'>''' % catIDPath
+                output += '''<input name="newcatname" type="text" placeholder = '%s' >''' % pathCategoryQuery.name
+                output += '''<input type = "submit" value = "Rename"> </form>'''
+                output += "</body></html>"
+                self.wfile.write(output)
+                print (output)
                 return
 
             if self.path.endswith("/amazon/newcat"):
@@ -64,6 +90,28 @@ class webServerHandler(BaseHTTPRequestHandler):
                 print (output)
                 return
 
+            if self.path.endswith("/catdelete"):
+                print ("self.path :", self.path)
+                catIDPath = self.path.split("/")[2]
+                print ("self.path.split(/)[2] :", catIDPath)
+                pathCategoryQuery = session.query(Category).filter_by(
+                    id=catIDPath).one()
+                if pathCategoryQuery:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    output = ""
+                    output += "<html><body>"
+                output += "<h1>"
+                output += pathCategoryQuery.name
+                output += "</h1>"
+                output += '''<form method='POST' enctype='multipart/form-data' action='/amazon/%s/catdelete'>''' % catIDPath
+                output += '''<input name="delcatname" type="text" placeholder = '%s' >''' % pathCategoryQuery.name
+                output += '''<input type = "submit" value = "Confirm Delete"> </form>'''
+                output += "</body></html>"
+                self.wfile.write(output)
+                print (output)
+                return
 
         except IOError:
             self.send_error(404, 'File Not Found: %s' % self.path)
@@ -87,6 +135,47 @@ class webServerHandler(BaseHTTPRequestHandler):
                 self.send_header('Location', '/amazon')
                 self.end_headers()
 
+            if self.path.endswith("/catedit"):
+                print ("entering do_post /catedit")
+                ctype, pdict = cgi.parse_header(
+                    self.headers.getheader('content-type'))
+                if ctype == 'multipart/form-data':
+                    fields = cgi.parse_multipart(self.rfile, pdict)
+                    messagecontent = fields.get('newcatname')
+                    catIDPath = self.path.split("/")[2]
+                    print ("catIDPath :", catIDPath)
+                    pathCategoryQuery = session.query(Category).filter_by(id=catIDPath).one()
+                    print "pathCategoryQuery.name : ", pathCategoryQuery.name
+                    if pathCategoryQuery != []:
+                        print ("entering if pathCategoryQuery != []")
+                        print ("messagecontent[0] : ", messagecontent[0])
+                        pathCategoryQuery.name = messagecontent[0]
+                        print ("New category name : ", pathCategoryQuery.name)
+                        session.add(pathCategoryQuery)
+                        session.commit()
+
+                        self.send_response(301)
+                        self.send_header('Content-type', 'text/html')
+                        self.send_header('Location', '/amazon')
+                        self.end_headers()
+
+            if self.path.endswith("/catdelete"):
+                print ("entering do_post /delete")
+
+                catIDPath = self.path.split("/")[2]
+                print ("catIDPath :", catIDPath)
+                pathCategoryQuery = session.query(Category).filter_by(id=catIDPath).one()
+                print "pathCategoryQuery.name : ", pathCategoryQuery.name
+                if pathCategoryQuery:
+                    print ("entering if pathCategoryQuery")
+                    print ("category name to delete: ", pathCategoryQuery.name)
+                    session.delete(pathCategoryQuery)
+                    session.commit()
+
+                    self.send_response(301)
+                    self.send_header('Content-type', 'text/html')
+                    self.send_header('Location', '/amazon')
+                    self.end_headers()
         except:
             pass
 
