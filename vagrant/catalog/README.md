@@ -5,6 +5,14 @@
  - This app allows registered users to create Categories and populate them with products a bit similar to Amazon except there's no purchasing aspect.
  - Each user can edit or delete the categories or products he/she has created but can only 'browse' other people's categories and products.
  - unregistered users can only browse categories and products.
+ - Authentication is done through Facebook or Google.
+
+ _The 2 Json files required for this process are not been sent to Github for security purposes. I will send them separately through the Udacity loading page._
+
+- Here are the 2 required file names:
+
+  1. client_secrets.json
+  2. fb_client.secrets.json
 
 ## **The Script**
 
@@ -36,13 +44,13 @@ The script is written in Python 3.
 
   - There are 2 options to create JSON files:
 
-          1. `/category/<int:category_id>/JSON` _Creates a Json file with:_
+        1. `/category/<int:category_id>/JSON` _Creates a Json file with:_
 
             - Category name
             - Category id
             - userId of the creator of the category
 
-          2. `/category/<int:category_id>/<int:product_id>/JSON` _Creates a Json file with:_
+        2. `/category/<int:category_id>/<int:product_id>/JSON` _Creates a Json file with:_
 
             - Product id
             - Product name
